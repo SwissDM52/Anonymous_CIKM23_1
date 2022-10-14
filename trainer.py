@@ -3,7 +3,8 @@ import torch.optim as optim
 from enc import SoftCrossEntropy
 import random
 from dataset import get_datasets
-from dataset import get_testloader_label
+from dataset import get_testloader_cifar10
+from dataset import get_testloader_cifar100
 import torch
 import enc as eg
 import datetime
@@ -56,7 +57,7 @@ def train_sip(model, trainloader, device, mapp, p, EPOCH=50, LR=0.001):
     return model
 
 
-def train_random(model, tranloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
+def train_random(model, trainloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
     criterion = SoftCrossEntropy
     print("Start Training!")
     model.train()  # 网络设置为训练模式
@@ -64,14 +65,14 @@ def train_random(model, tranloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
                                 weight_decay=5e-4)
     for i in range(EPOCH):
         print("epoch = {}, time = {}".format(i, datetime.datetime.now()))
-        for batch_idx, (data, label) in enumerate(tranloader()):
+        for index, (inputs, labels) in enumerate(trainloader):
             # 前向传播
             mas = []
-            for i in range(len(label)):
+            for i in range(len(labels)):
                 x = random.randint(0, 0)
-                mat = mapp[label[i].data.item()]
+                mat = mapp[labels[i].data.item()]
                 mas.append(mat[x])
-            data, label = data.to(device), label.to(device)
+            data, label = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             output = model(data, p, pk, device, "train")
             loss = criterion(output, mas, device, p, reduction='average')
@@ -82,7 +83,7 @@ def train_random(model, tranloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
     return model
 
 
-def train_fake(model, tranloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
+def train_fake(model, trainloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
     criterion = SoftCrossEntropy
     print("Start Training!")
     model.train()  # 网络设置为训练模式
@@ -90,7 +91,7 @@ def train_fake(model, tranloader, device, pk, mapp, p, EPOCH=50, LR=0.001):
                                 weight_decay=5e-4)
     for i in range(EPOCH):
         print("epoch = {}, time = {}".format(i, datetime.datetime.now()))
-        for batch_idx, (data, label) in enumerate(tranloader()):
+        for batch_idx, (data, label) in enumerate(trainloader):
             # 前向传播
             mas = []
             for i in range(len(label)):
@@ -128,6 +129,7 @@ def get_fake_mapp(pk, egs, fake, num_classes):
         mapp[i] = mas
     mas = []
     mas.append(fake)
+    print("num_classes -1 = {}".format(num_classes - 1))
     mapp[num_classes - 1] = mas
     return mapp
 
@@ -182,12 +184,17 @@ def trains_by_random(model, trainloader, testloader, num_classes, p, EPOCH=50, L
     torch.save(model.state_dict(), "./learning_random_{}.pth".format(p))
 
 
-def trains_by_fake(model, trainloader, num_classes, p, EPOCH=50, LR=0.001):
-    testloader = get_testloader_label(9, 10)
+def trains_by_fake(model, trainloader, num_classes, p, EPOCH=50, LR=0.001, datas = 'cifar10'):
+    if datas == 'cifar10':
+        testloader = get_testloader_cifar10(num_classes - 1, num_classes)
+    elif datas == 'cifar100':
+        testloader = get_testloader_cifar100(num_classes - 1, num_classes)
     egs = eg.Egamal(p)
     pk, sk = egs.keygen(egs.p)
     fake = egs.Fake(egs.p, pk)
-    ys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    ys = []
+    for i in range(num_classes):
+        ys.append(i)
     xs = egs.get_xs(pk, ys)
     mapp = get_fake_mapp(pk, egs, fake, num_classes)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -196,23 +203,15 @@ def trains_by_fake(model, trainloader, num_classes, p, EPOCH=50, LR=0.001):
     models = train_fake(model, trainloader, device, pk, mapp, p, EPOCH, LR)
     endtime = datetime.datetime.now()
     alltimes = endtime - starttime
-    accuracy = test_fake_sks(models, testloader, egs, xs, ys, device, p)
+    accuracy = test_fake_sks(models, testloader, egs, pk, xs, ys, device, fake)
     files = open('learning_fake_{}.txt'.format(p), mode='a')
     files.writelines(
         'The testing accuracy is：{}%, the training time is：{}\n'.format(accuracy * 100, alltimes))
     files.writelines('fake = {}\n'.format(fake))
     files.writelines('pk = {}\n'.format(pk))
     files.writelines('xs = {}, ys = {}\n'.format(xs, ys))
-    files.writelines('sk1 = {}\n'.format([xs[0], ys[0]]))
-    files.writelines('sk2 = {}\n'.format([xs[1], ys[1]]))
-    files.writelines('sk3 = {}\n'.format([xs[2], ys[2]]))
-    files.writelines('sk4 = {}\n'.format([xs[3], ys[3]]))
-    files.writelines('sk5 = {}\n'.format([xs[4], ys[4]]))
-    files.writelines('sk6 = {}\n'.format([xs[5], ys[5]]))
-    files.writelines('sk7 = {}\n'.format([xs[6], ys[6]]))
-    files.writelines('sk8 = {}\n'.format([xs[7], ys[7]]))
-    files.writelines('sk9 = {}\n'.format([xs[8], ys[8]]))
-    files.writelines('sk10 = {}\n'.format([xs[9], ys[9]]))
+    for i in range(num_classes):
+        files.writelines('sk{} = {}\n'.format(i, [xs[i], ys[i]]))
     files.close()
     torch.save(model.state_dict(), "./learning_fake_{}.pth".format(p))
 
@@ -238,7 +237,7 @@ def training(args):
             num_classes = 100
         model = get_random_model(args['dataset'], args['p'] * 3)
         trainloader, _ = get_datasets(args['dataset'], args['batch_size'], args['num_workers'])
-        trains_by_fake(model, trainloader, num_classes, args['p'], args['epochs'], args['lr'])
+        trains_by_fake(model, trainloader, num_classes, args['p'], args['epochs'], args['lr'], args['dataset'])
     else:
         num_classes = 10
         if args['dataset'] == 'cifar100':

@@ -104,6 +104,17 @@ class Egamal():
         c = [u1s, u2s, u3s]
         return c
 
+    def get_xs(self, pk, ys):
+        h = pk[2]
+        g1 = pk[0]
+        g2 = pk[1]
+        xs = []
+        for i in range(len(ys)):
+            y1 = ys[i]
+            x1 = self.get_x2(h, g1, g2, y1, self.p)
+            xs.append(x1)
+        return xs
+
     # Driver code
     def mains(self):
         pk, sk = self.keygen(self.p)

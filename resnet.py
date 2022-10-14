@@ -71,7 +71,7 @@ class ResNet(nn.Module):
 
 class ResNetRandom(nn.Module):
     def __init__(self, ResidualBlock, num_classes=10):
-        super(ResNet, self).__init__()
+        super(ResNetRandom, self).__init__()
         self.inchannel = 64
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
