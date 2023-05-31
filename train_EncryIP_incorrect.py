@@ -1,8 +1,8 @@
 import torch
 import enc as eg
 import datetime
-from trainer import train_sip
-from tester import test_sip
+from trainer import train_EncryIP
+from tester import test_EncryIP
 import random
 
 
@@ -23,7 +23,7 @@ def trains_by_p(p):
     mapp = get_mapp(pk, egs)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     starttime = datetime.datetime.now()
-    model = train_sip(device, mapp, p)
+    model = train_EncryIP(device, mapp, p)
     endtime = datetime.datetime.now()
     alltimes = endtime - starttime
     y2 = egs.mod(sk[1] + random.randint(1, 10), 11)
@@ -33,8 +33,8 @@ def trains_by_p(p):
         x2 = egs.mod(egs.get_x2(pk[2], pk[0], pk[1], y2, 11) + 1, 11)
     sk[0] = x2
     sk[1] = y2
-    accuracy = test_sip(model, egs, sk, device, p)
-    files = open('resnet18_sip.txt', mode='a')
+    accuracy = test_EncryIP(model, egs, sk, device, p)
+    files = open('resnet18_EncryIP.txt', mode='a')
     files.writelines(
         'incorrect sk test：The testing accuracy is：{}%，the training time is：{}\n'.format(accuracy * 100, alltimes))
     files.close()
