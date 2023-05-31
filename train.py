@@ -17,7 +17,7 @@ def main():
                                                                  'cifar10',
                                                                  'cifar100'],
                         help='training dataset (default: cifar10)')
-    parser.add_argument('--sip', action='store_true', default=False,
+    parser.add_argument('--EncryIP', action='store_true', default=False,
                         help='learning in enncrypted environment or not')
     parser.add_argument('--random', action='store_true', default=False,
                         help='learning in enncrypted random environment or not')
@@ -27,7 +27,7 @@ def main():
                         help='Encryption base parameters, which should be greater than the number of classes (default: 11, should be prime)')
 
     args = vars(parser.parse_args())
-    if args['sip']:
+    if args['EncryIP']:
         if sympy.isprime(args['p']) == False:
             print("ERROR：p must be prime！")
             return
