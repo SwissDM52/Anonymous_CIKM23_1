@@ -8,7 +8,7 @@ from dataset import get_testloader_cifar100
 import torch
 import enc as eg
 import datetime
-from tester import test_sip
+from tester import test_EncryIP
 from tester import test_random
 from tester import test_fake_sks
 from tester import test_original
@@ -34,7 +34,7 @@ def train_original(model, trainloader, device, EPOCH=50, LR=0.001):
     return model
 
 
-def train_sip(model, trainloader, device, mapp, p, EPOCH=50, LR=0.001):
+def train_EncryIP(model, trainloader, device, mapp, p, EPOCH=50, LR=0.001):
     criterion = SoftCrossEntropy
     optimizer = optim.SGD(model.parameters(), lr=LR, momentum=0.9,
                           weight_decay=5e-4)
