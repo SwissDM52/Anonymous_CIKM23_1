@@ -9,7 +9,7 @@
 - resnet_mnist.py ------- model structure for mnist
 - tester.py ------- deploying process
 - train.py ------- main function is here.
-- train_sip_incrorect.py ------- evaluate EncryIP with an  incrorect secrest key.
+- train_EncryIP_incrorect.py ------- evaluate EncryIP with an  incrorect secrest key.
 - trainer.py ------- learning process
 
 Train original default (dataset : cifar10 , original) :
