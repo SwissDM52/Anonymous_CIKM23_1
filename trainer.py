@@ -141,15 +141,15 @@ def trains_by_p(model, trainloader, testloader, num_classes, p, EPOCH=50, LR=0.0
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     starttime = datetime.datetime.now()
-    models = train_sip(model, trainloader, device, mapp, p, EPOCH, LR)
+    models = train_EncryIP(model, trainloader, device, mapp, p, EPOCH, LR)
     endtime = datetime.datetime.now()
     alltimes = endtime - starttime
-    accuracy = test_sip(models, testloader, egs, sk, device, p)
-    files = open('learning_sip_{}.txt'.format(p), mode='a')
+    accuracy = test_EncryIP(models, testloader, egs, sk, device, p)
+    files = open('learning_EncryIP_{}.txt'.format(p), mode='a')
     files.writelines(
         'The testing accuracy is：{}%，the training time is：{}\n'.format(accuracy * 100, alltimes))
     files.close()
-    torch.save(model.state_dict(), "./learning_sip_{}.pth".format(p))
+    torch.save(model.state_dict(), "./learning_EncryIP_{}.pth".format(p))
 
 
 def trains_by_original(model, trainloader, testloader, EPOCH, LR):
@@ -217,7 +217,7 @@ def trains_by_fake(model, trainloader, num_classes, p, EPOCH=50, LR=0.001, datas
 
 
 def training(args):
-    if args['sip']:
+    if args['EncryIP']:
         num_classes = 10
         if args['dataset'] == 'cifar100':
             num_classes = 100
