@@ -20,7 +20,7 @@ def test_original(model, testloader, device):
     return acc
 
 
-def test_sip(model, testloader, egs, sk, device, p):
+def test_EncryIP(model, testloader, egs, sk, device, p):
     model.eval()
     correct, total = 0, 0
     for batch_idx, (images, label) in enumerate(testloader):
